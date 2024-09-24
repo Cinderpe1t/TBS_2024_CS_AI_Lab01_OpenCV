@@ -1,28 +1,20 @@
+#CS AI and Computer Vision Lab #1
+#by Angelina Kim
+#
+#Coverage
 #Ch3: Loading, diplaying, saving
-#Ch4: Image basics -> image data manipulation
-#Ch5: Drawing -> draw optical flow, rip current channel
-#Ch6: Image processing -> image processing arithmatics and logical operations
-#Ch7: Histograms -> display RGB channel distribution
-#Ch8: Smoothing and blurring -> try smoothing for object detection
-#Ch9: Thresholding -> try wave feature extraction with thresholding
-#Ch10: Gradients and edge detection -> gradient for information density weight calculation
-#Ch11: Contours -> try detect wave front
-#Extra: detect object
-#Extra: track object
-#Extra: optical flow between two images
+#Ch4: Image basics
+#Ch5: Drawing
+#Ch6: Image processing
+#Ch7: Histograms
+#Ch8: Smoothing and blurring
+#Ch9: Thresholding
+#Ch10: Gradients and edge detection
+#Ch11: Contours
+#Extra1: SIFT feature detection
+#Extra2: Farnebeck dense optical flow
 
-#Part 1: optical flow demonstration
-#Ocean image display
-#Ocean image characteristics
-#Wave front detection
-#Optical flow
-#Information weighted optical flow
-#Rip current channel analysis
-
-#Part 2: object detection and tracking
-#object detection
-#object tracking
-
+#Import libraries
 from __future__ import print_function
 import numpy as np
 import argparse
@@ -30,68 +22,87 @@ import cv2
 import time
 from matplotlib import pyplot as plt
 
-#Display first screen
-def show00_display_title(window_setup, image_data_setup, title_setup):
-    frame_size_x, frame_size_y, frame_size_half_x, frame_size_half_y, \
-        image_size_quart_y, frame_delay, rgb_color = window_setup
-    image_path, image_prefix, image_suffix, frame_start_index, frame_count \
-        = image_data_setup
-    xy_cord_title, xy_cord_index, font, font_scale, font_color, \
-        font_thickness, window_title = title_setup
+#Class to store window and image setup
+class SetUp:
+    def __init__(self, image_path: str, image_prefix: str, image_suffix: str, 
+                 frame_start_index: int, frame_count: int):
+        #Window set up
+        self.frame_size_x = 1920
+        self.frame_size_y = 1080
+        self.frame_size_half_x = int(self.frame_size_x / 2)
+        self.frame_size_half_y = int(self.frame_size_y / 2)
+        self.image_size_quart_y = int(self.frame_size_y / 4)
+        self.frame_delay = 1
+        self.rgb_color = ("b", "g", "r")
 
-    frame_index = frame_start_index
-    frame_name = image_path + image_prefix + str(frame_index) + image_suffix
+        #Title set up
+        self.xy_cord_title = (100, 75)
+        self.xy_cord_index = (1300, 75)
+        self.font = cv2.FONT_HERSHEY_SIMPLEX
+        self.font_scale = 2
+        self.font_color = (255, 255, 255)
+        self.font_thickness = 2
+        self.window_title = "AI lab 01"
+
+        #Work on image set #1
+        self.image_path = image_path
+        self.image_prefix = image_prefix
+        self.image_suffix = image_suffix
+        self.frame_start_index = frame_start_index
+        self.frame_count = frame_count
+    
+        #Histogram set up
+        self.hist_height_inch = 3
+        self.hist_width_inch = 6
+        self.hist_dpi = 100
+        self.hist_anker_x = 1300
+        self.hist_anker_y = 100
+        self.hist_height = self.hist_height_inch * self.hist_dpi
+        self.hist_width = self.hist_width_inch * self.hist_dpi
+
+    def image_file_name(self, frame_index: int) -> str:
+        return self.image_path + self.image_prefix + \
+            str(self.frame_start_index + frame_index) + self.image_suffix
+
+#Display first screen
+def show00_display_title(setup: SetUp) -> None:
+    """Display title page and pause"""
+    frame_name = setup.image_file_name(0)
     frame = cv2.imread(frame_name)
-    frame = cv2.putText(frame, "AI / Computer Vision Lab #1", xy_cord_title, 
-                        font, font_scale, font_color, font_thickness)
-    cv2.imshow(window_title, frame)
+    frame = cv2.putText(frame, "AI / Computer Vision Lab #1", 
+                        setup.xy_cord_title, setup.font, setup.font_scale, 
+                        setup.font_color, setup.font_thickness)
+    cv2.imshow(setup.window_title, frame)
     cv2.waitKey(0)
+    return None
 
 #Display original image set #1
-def show01_display_original_image_set(window_setup, image_data_setup, 
-                                      title_setup):
-    frame_size_x, frame_size_y, frame_size_half_x, frame_size_half_y, \
-        image_size_quart_y, frame_delay, rgb_color = window_setup
-    image_path, image_prefix, image_suffix, frame_start_index, frame_count \
-        = image_data_setup
-    xy_cord_title, xy_cord_index, font, font_scale, font_color, \
-        font_thickness, window_title = title_setup
-    
-    for i in range(frame_count):
-        frame_index = frame_start_index + i
-        frame_name = image_path + image_prefix + str(frame_index) + image_suffix
+def show01_display_original_image_set(setup: SetUp) -> None:
+    """Display original image set"""
+    for i in range(setup.frame_count):
+        frame_name = setup.image_file_name(i)
         frame = cv2.imread(frame_name)
-        frame = cv2.putText(frame, "Original images", xy_cord_title, font, 
-                            font_scale, font_color, font_thickness)
-        frame = cv2.putText(frame, "Frame index: " + str(frame_index), 
-                            xy_cord_index, font, font_scale, font_color, 
-                            font_thickness)
-        cv2.imshow(window_title, frame)
-        cv2.waitKey(frame_delay)
+        frame = cv2.putText(frame, "Original images", setup.xy_cord_title, 
+                            setup.font, setup.font_scale, setup.font_color, 
+                            setup.font_thickness)
+        frame = cv2.putText(frame, "Frame index: " + str(i), 
+                            setup.xy_cord_index, setup.font, setup.font_scale,
+                            setup.font_color, setup.font_thickness)
+        cv2.imshow(setup.window_title, frame)
+        cv2.waitKey(setup.frame_delay)
 
     cv2.waitKey(0)
+    return None
 
 #Display image RGB and gray scale intensity histogram
-def show02_display_rgb_histogram(window_setup, image_data_setup, title_setup, 
-                                 hist_dimension):
-    frame_size_x, frame_size_y, frame_size_half_x, frame_size_half_y, \
-        image_size_quart_y, frame_delay, rgb_color = window_setup
-    image_path, image_prefix, image_suffix, frame_start_index, frame_count \
-        = image_data_setup
-    xy_cord_title, xy_cord_index, font, font_scale, font_color, \
-        font_thickness, window_title = title_setup
-    #Histogram variables
-    hist_height_inch, hist_width_inch, hist_dpi, hist_anker_x, hist_anker_y \
-        = hist_dimension
-    hist_height = hist_height_inch * hist_dpi
-    hist_width = hist_width_inch * hist_dpi
-
+def show02_display_rgb_histogram(setup: SetUp) -> None:
+    """Display gray and RGB intensity histograms"""
     #Set up canvas for histogram
-    fig, ax = plt.subplots(figsize = (hist_width_inch, hist_height_inch), 
-                           dpi = hist_dpi)
-    for i in range(frame_count):
-        frame_index = frame_start_index + i
-        frame_name = image_path + image_prefix + str(frame_index) + image_suffix
+    fig, ax = plt.subplots(figsize = (setup.hist_width_inch, 
+                                      setup.hist_height_inch), 
+                                      dpi = setup.hist_dpi)
+    for i in range(setup.frame_count):
+        frame_name = setup.image_file_name(i)
         frame = cv2.imread(frame_name)
 
         #gray histogram
@@ -101,7 +112,7 @@ def show02_display_rgb_histogram(window_setup, image_data_setup, title_setup,
         
         #RGB histogram
         rgb_channel = cv2.split(frame)
-        for (channel, color) in zip(rgb_channel, rgb_color):
+        for (channel, color) in zip(rgb_channel, setup.rgb_color):
             hist = cv2.calcHist([channel], [0], None, [256], [0, 256])
             ax.plot(hist, color = color)
         ax.set_xlim([0, 256])
@@ -113,85 +124,78 @@ def show02_display_rgb_histogram(window_setup, image_data_setup, title_setup,
         img_plot_cv2 = cv2.cvtColor(img_plot, cv2.COLOR_RGBA2BGR)
         
         #insert plot to image
-        frame[ hist_anker_y:hist_anker_y + hist_height, 
-              hist_anker_x:hist_anker_x + hist_width, :] = img_plot_cv2
+        anker_y1 = setup.hist_anker_y
+        anker_y2 = setup.hist_anker_y + setup.hist_height
+        anker_x1 = setup.hist_anker_x
+        anker_x2 = setup.hist_anker_x + setup.hist_width
+        frame[ anker_y1:anker_y2, anker_x1:anker_x2, :] = img_plot_cv2
 
         #add description
-        frame = cv2.putText(frame, "RGB and gray histogram", xy_cord_title, 
-                            font, font_scale, font_color, font_thickness)
-        frame = cv2.putText(frame, "Frame index: " + str(frame_index), 
-                            xy_cord_index, font, font_scale, font_color, 
-                            font_thickness)
+        frame = cv2.putText(frame, "RGB and gray histogram", 
+                            setup.xy_cord_title, setup.font, setup.font_scale, 
+                            setup.font_color, setup.font_thickness)
+        frame = cv2.putText(frame, "Frame index: " + str(i), 
+                            setup.xy_cord_index, setup.font, setup.font_scale, 
+                            setup.font_color, setup.font_thickness)
         
-        cv2.imshow(window_title, frame)
-        cv2.waitKey(frame_delay)
+        cv2.imshow(setup.window_title, frame)
+        cv2.waitKey(setup.frame_delay)
         ax.cla() #clear plot
 
     cv2.waitKey(0)
     #close histogram canvas
     plt.close()
+    return None
 
 #Blurring
-def show03_display_blur_response(window_setup, image_data_setup, title_setup):
-    frame_size_x, frame_size_y, frame_size_half_x, frame_size_half_y, \
-        image_size_quart_y, frame_delay, rgb_color = window_setup
-    image_path, image_prefix, image_suffix, frame_start_index, frame_count \
-        = image_data_setup
-    xy_cord_title, xy_cord_index, font, font_scale, font_color, \
-        font_thickness, window_title = title_setup
-    
-    for i in range(frame_count):
-        frame_index = frame_start_index + i
-        frame_name = image_path + image_prefix + str(frame_index) + image_suffix
+def show03_display_blur_response(setup: SetUp) -> None:
+    """Display blur response at 4 vertical windows"""
+    for i in range(setup.frame_count):
+        frame_name = setup.image_file_name(i)
         frame = cv2.imread(frame_name)
         
         #empty frame to collect blurred sections
-        frame_collect = np.zeros((frame_size_y, frame_size_x, 3), np.uint8)
+        frame_collect = np.zeros((setup.frame_size_y, setup.frame_size_x, 3), 
+                                 np.uint8)
 
         #Gaussian blur
-        frame_collect[0:image_size_quart_y,:,:] = \
-            cv2.GaussianBlur(frame[0:image_size_quart_y,:,:], (3, 3), 0)
-        frame_collect[image_size_quart_y:image_size_quart_y*2,:,:] = \
-            cv2.GaussianBlur(frame[image_size_quart_y:image_size_quart_y*2,:,:], 
-                             (5, 5), 0)
-        frame_collect[image_size_quart_y*2:image_size_quart_y*3,:,:] = \
-            cv2.GaussianBlur(frame[image_size_quart_y*2:image_size_quart_y*3,:,
-                                   :], (9, 9), 0)
-        frame_collect[image_size_quart_y*3:image_size_quart_y*4,:,:] = \
-            cv2.GaussianBlur(frame[image_size_quart_y*3:image_size_quart_y*4,:,
-                                   :], (15, 15), 0)
+        y025=setup.image_size_quart_y
+        frame_collect[0:y025, :, :] = \
+            cv2.GaussianBlur(frame[0:y025, :, :], (3, 3), 0)
+        frame_collect[y025:y025*2, :, :] = \
+            cv2.GaussianBlur(frame[y025:y025*2, :, :], (5, 5), 0)
+        frame_collect[y025*2:y025*3, :, :] = \
+            cv2.GaussianBlur(frame[y025*2:y025*3,:, :], (9, 9), 0)
+        frame_collect[y025*3:y025*4, :, :] = \
+            cv2.GaussianBlur(frame[y025*3:y025*4, :, :], (15, 15), 0)
+        
+        #Draw rectangles
+        for j in range(4):
+            frame_collect = \
+                cv2.rectangle(frame_collect, (0, y025 * j), 
+                              (setup.frame_size_x, y025 * (j + 1)), 
+                              setup.font_color, setup.font_thickness)
         
         #Add description
-        for i in range(4):
-            frame_collect = \
-                cv2.rectangle(frame_collect, (0, image_size_quart_y*i), 
-                              (frame_size_x, image_size_quart_y*(i+1)), 
-                              font_color, font_thickness)
         frame_collect = \
-            cv2.putText(frame_collect, "Blurring response", xy_cord_title, font, 
-                        font_scale, font_color, font_thickness)
+            cv2.putText(frame_collect, "Blurring response", setup.xy_cord_title, 
+                        setup.font, setup.font_scale, setup.font_color, 
+                        setup.font_thickness)
         frame_collect = \
-            cv2.putText(frame_collect, "Image index: " + str(frame_index), 
-                        xy_cord_index, font, font_scale, font_color, 
-                        font_thickness)
-        cv2.imshow(window_title, frame_collect)
-        cv2.waitKey(frame_delay)
+            cv2.putText(frame_collect, "Image index: " + str(i), 
+                        setup.xy_cord_index, setup.font, setup.font_scale, 
+                        setup.font_color, setup.font_thickness)
+        cv2.imshow(setup.window_title, frame_collect)
+        cv2.waitKey(setup.frame_delay)
 
     cv2.waitKey(0)
-
+    return None
 
 #Thresholding on gray and RGB
-def show04_display_threshold(window_setup, image_data_setup, title_setup):
-    frame_size_x, frame_size_y, frame_size_half_x, frame_size_half_y, \
-        image_size_quart_y, frame_delay, rgb_color = window_setup
-    image_path, image_prefix, image_suffix, frame_start_index, frame_count \
-        = image_data_setup
-    xy_cord_title, xy_cord_index, font, font_scale, font_color, \
-        font_thickness, window_title = title_setup
-    
-    for i in range(frame_count):
-        frame_index = frame_start_index + i
-        frame_name = image_path + image_prefix + str(frame_index) + image_suffix
+def show04_display_threshold(setup: SetUp) -> None:
+    """Display gray and RGB threshold output at 4 sub-windows"""
+    for i in range(setup.frame_count):
+        frame_name = setup.image_file_name(i)
         frame = cv2.imread(frame_name)
 
         #Gray and threshold
@@ -222,78 +226,68 @@ def show04_display_threshold(window_setup, image_data_setup, title_setup):
         thresh_green_half = cv2.resize(thresh_green, (0, 0), fx = 0.5, fy = 0.5)
         thresh_blue_half = cv2.resize(thresh_blue, (0, 0), fx = 0.5, fy = 0.5)
 
-        frame_collect = np.zeros((frame_size_y, frame_size_x, 3), np.uint8)
+        frame_collect = np.zeros((setup.frame_size_y, setup.frame_size_x, 3), 
+                                 np.uint8)
         frame_collect[:, :, 0] = 0
         frame_collect[:, :, 1] = 0
         frame_collect[:, :, 2] = 0
         
         #Assemble threshold results
-        frame_collect[ 0:frame_size_half_y, 0:frame_size_half_x, :] = \
+        x05 = setup.frame_size_half_x
+        x10 = setup.frame_size_x
+        y05 = setup.frame_size_half_y
+        y10 = setup.frame_size_y
+        frame_collect[ 0:y05, 0:x05, :] = \
             cv2.cvtColor(thresh_gray_half,cv2.COLOR_GRAY2RGB) 
-        frame_collect[ 0:frame_size_half_y, 
-                      frame_size_half_x:frame_size_x, 0] = thresh_blue_half
-        frame_collect[ frame_size_half_y:frame_size_y, 
-                      0:frame_size_half_x, 1] = thresh_green_half
-        frame_collect[ frame_size_half_y:frame_size_y, 
-                      frame_size_half_x:frame_size_x, 2] = thresh_red_half
+        frame_collect[   0:y05, x05:x10, 0] = thresh_blue_half
+        frame_collect[ y05:y10,   0:x05, 1] = thresh_green_half
+        frame_collect[ y05:y10, x05:x10, 2] = thresh_red_half
         
         #Add description
         frame_collect = \
-            cv2.putText(frame_collect, "Gray and RGB threshold", xy_cord_title, 
-                        font, font_scale, font_color, font_thickness)
+            cv2.putText(frame_collect, "Gray and RGB threshold", 
+                        setup.xy_cord_title, setup.font, setup.font_scale, 
+                        setup.font_color, setup.font_thickness)
         frame_collect = \
-            cv2.putText(frame_collect, "Image index: " + str(frame_index), 
-                        xy_cord_index, font, font_scale, font_color, 
-                        font_thickness)
-        cv2.imshow(window_title, frame_collect)
-        cv2.waitKey(frame_delay)
+            cv2.putText(frame_collect, "Image index: " + str(i), 
+                        setup.xy_cord_index, setup.font, setup.font_scale, 
+                        setup.font_color, setup.font_thickness)
+        cv2.imshow(setup.window_title, frame_collect)
+        cv2.waitKey(setup.frame_delay)
 
     cv2.waitKey(0)
+    return None
 
 #Gradient and edge detection - Canny edge detection
-def show05_display_canny_edge(window_setup, image_data_setup, title_setup):
-    frame_size_x, frame_size_y, frame_size_half_x, frame_size_half_y, \
-        image_size_quart_y, frame_delay, rgb_color = window_setup
-    image_path, image_prefix, image_suffix, frame_start_index, frame_count \
-        = image_data_setup
-    xy_cord_title, xy_cord_index, font, font_scale, font_color, \
-        font_thickness, window_title = title_setup
-    
-    for i in range(frame_count):
-        frame_index = frame_start_index + i
-        frame_name = image_path + image_prefix + str(frame_index) + image_suffix
+def show05_display_canny_edge(setup: SetUp) -> None:
+    """Perform and display Canny edge detection"""
+    for i in range(setup.frame_count):
+        frame_name = setup.image_file_name(i)
         frame = cv2.imread(frame_name)
-
         #Canny edge detector
         frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         edge_canny = cv2.Canny(frame_gray, 10, 250, 3)
         
         #Add description
         edge_canny = \
-            cv2.putText(edge_canny, "Canny edge detection", xy_cord_title, font, 
-                        font_scale, font_color, font_thickness)
+            cv2.putText(edge_canny, "Canny edge detection", setup.xy_cord_title, 
+                        setup.font, setup.font_scale, setup.font_color, 
+                        setup.font_thickness)
         edge_canny = \
-            cv2.putText(edge_canny, "Image index: " + str(frame_index), 
-                        xy_cord_index, font, font_scale, font_color, 
-                        font_thickness)
-        cv2.imshow(window_title, edge_canny)
-        cv2.waitKey(frame_delay)
+            cv2.putText(edge_canny, "Image index: " + str(i), 
+                        setup.xy_cord_index, setup.font, setup.font_scale, 
+                        setup.font_color, setup.font_thickness)
+        cv2.imshow(setup.window_title, edge_canny)
+        cv2.waitKey(setup.frame_delay)
     
     cv2.waitKey(0)
+    return None
 
 #Laplacian gradient
-def show06_display_laplacian_gradient(window_setup, image_data_setup, 
-                                      title_setup):
-    frame_size_x, frame_size_y, frame_size_half_x, frame_size_half_y, \
-        image_size_quart_y, frame_delay, rgb_color = window_setup
-    image_path, image_prefix, image_suffix, frame_start_index, frame_count \
-        = image_data_setup
-    xy_cord_title, xy_cord_index, font, font_scale, font_color, \
-        font_thickness, window_title = title_setup
-    
-    for i in range(frame_count):
-        frame_index = frame_start_index + i
-        frame_name = image_path + image_prefix + str(frame_index) + image_suffix
+def show06_display_laplacian_gradient(setup: SetUp) -> None:
+    """Perform and display Laplacian gradient"""
+    for i in range(setup.frame_count):
+        frame_name = setup.image_file_name(i)
         frame = cv2.imread(frame_name)
 
         #Laplacian gradient
@@ -303,30 +297,24 @@ def show06_display_laplacian_gradient(window_setup, image_data_setup,
         
         #Add description
         gradient_laplacian = \
-            cv2.putText(gradient_laplacian, "Laplacian gradient", xy_cord_title, 
-                        font, font_scale, font_color, font_thickness)
+            cv2.putText(gradient_laplacian, "Laplacian gradient", 
+                        setup.xy_cord_title, setup.font, setup.font_scale, 
+                        setup.font_color, setup.font_thickness)
         gradient_laplacian = \
-            cv2.putText(gradient_laplacian, "Image index: " + str(frame_index), 
-                        xy_cord_index, font, font_scale, font_color, 
-                        font_thickness)
-        cv2.imshow(window_title, gradient_laplacian)
-        cv2.waitKey(frame_delay)
+            cv2.putText(gradient_laplacian, "Image index: " + str(i), 
+                        setup.xy_cord_index, setup.font, setup.font_scale, 
+                        setup.font_color, setup.font_thickness)
+        cv2.imshow(setup.window_title, gradient_laplacian)
+        cv2.waitKey(setup.frame_delay)
 
     cv2.waitKey(0)
-
+    return None
 
 #Contour detection
-def show07_display_canny_contour(window_setup, image_data_setup, title_setup):
-    frame_size_x, frame_size_y, frame_size_half_x, frame_size_half_y, \
-        image_size_quart_y, frame_delay, rgb_color = window_setup
-    image_path, image_prefix, image_suffix, frame_start_index, frame_count \
-        = image_data_setup
-    xy_cord_title, xy_cord_index, font, font_scale, font_color, \
-        font_thickness, window_title = title_setup
-    
-    for i in range(frame_count):
-        frame_index = frame_start_index + i
-        frame_name = image_path + image_prefix + str(frame_index) + image_suffix
+def show07_display_canny_contour(setup: SetUp) -> None:
+    """Perform Canny edge detection and display contours"""
+    for i in range(setup.frame_count):
+        frame_name = setup.image_file_name(i)
         frame = cv2.imread(frame_name)
 
         #Canny edge and contour detection
@@ -337,27 +325,23 @@ def show07_display_canny_contour(window_setup, image_data_setup, title_setup):
         cv2.drawContours(frame, waves, -1, (0, 0, 0), 2)    
 
         #Add description
-        cv2.putText(frame, "Wave contour detection", xy_cord_title, font, 
-                    font_scale, font_color, font_thickness)
-        cv2.putText(frame, "Image index: " + str(frame_index), xy_cord_index, 
-                    font, font_scale, font_color, font_thickness)
-        cv2.imshow(window_title, frame)
-        cv2.waitKey(frame_delay)
+        cv2.putText(frame, "Wave contour detection", setup.xy_cord_title, 
+                        setup.font, setup.font_scale, setup.font_color, 
+                        setup.font_thickness)
+        cv2.putText(frame, "Image index: " + str(i), 
+                        setup.xy_cord_index, setup.font, setup.font_scale, 
+                        setup.font_color, setup.font_thickness)
+        cv2.imshow(setup.window_title, frame)
+        cv2.waitKey(setup.frame_delay)
 
     cv2.waitKey(0)
+    return None
 
 #SIFT (Scale Invariant Feature Transform) feature detection
-def show08_display_sift_feature(window_setup, image_data_setup, title_setup):
-    frame_size_x, frame_size_y, frame_size_half_x, frame_size_half_y, \
-        image_size_quart_y, frame_delay, rgb_color = window_setup
-    image_path, image_prefix, image_suffix, frame_start_index, frame_count \
-        = image_data_setup
-    xy_cord_title, xy_cord_index, font, font_scale, font_color, \
-        font_thickness, window_title = title_setup
-    
-    for i in range(frame_count):
-        frame_index = frame_start_index + i
-        frame_name = image_path + image_prefix + str(frame_index) + image_suffix
+def show08_display_sift_feature(setup: SetUp) -> None:
+    """Perform and display SIFT feature detection"""
+    for i in range(setup.frame_count):
+        frame_name = setup.image_file_name(i)
         frame = cv2.imread(frame_name)
 
         #SIFT feature detection
@@ -368,34 +352,28 @@ def show08_display_sift_feature(window_setup, image_data_setup, title_setup):
                                   cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
         #Add description
-        cv2.putText(frame, "SIFT feature detection", xy_cord_title, font, 
-                    font_scale, font_color, font_thickness)
-        cv2.putText(frame, "Image index: " + str(frame_index), xy_cord_index, 
-                    font, font_scale, font_color, font_thickness)
-        cv2.imshow(window_title, frame)
-        cv2.waitKey(frame_delay)
+        cv2.putText(frame, "SIFT feature detection", setup.xy_cord_title, 
+                        setup.font, setup.font_scale, setup.font_color, 
+                        setup.font_thickness)
+        cv2.putText(frame, "Image index: " + str(i), 
+                        setup.xy_cord_index, setup.font, setup.font_scale, 
+                        setup.font_color, setup.font_thickness)
+        cv2.imshow(setup.window_title, frame)
+        cv2.waitKey(setup.frame_delay)
     
     cv2.waitKey(0)
+    return None
 
 #Farneback dense optical flow
-def show09_display_farneback_dense_optical_flow(window_setup, image_data_setup, 
-                                                title_setup):
-    frame_size_x, frame_size_y, frame_size_half_x, frame_size_half_y, \
-        image_size_quart_y, frame_delay, rgb_color = window_setup
-    image_path, image_prefix, image_suffix, frame_start_index, frame_count \
-        = image_data_setup
-    xy_cord_title, xy_cord_index, font, font_scale, font_color, \
-        font_thickness, window_title = title_setup
-    
+def show09_display_farneback_dense_optical_flow(setup: SetUp) -> None:
+    """Perform Farneback dense optical flow"""
     #Load first frame, then start from second frame
-    frame_index = frame_start_index + 0
-    frame_name = image_path + image_prefix + str(frame_index) + image_suffix
+    frame_name = setup.image_file_name(0)
     frame = cv2.imread(frame_name)
     frame_gray_previous = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    for i in range(frame_count - 1):
-        frame_index = frame_start_index + 1 + i
-        frame_name = image_path + image_prefix + str(frame_index) + image_suffix
+    for i in range(setup.frame_count - 1):
+        frame_name = setup.image_file_name(i+1)
         frame = cv2.imread(frame_name)
         frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
@@ -414,32 +392,29 @@ def show09_display_farneback_dense_optical_flow(window_setup, image_data_setup,
                     flow_color = (255, 0, 0)
                 else:
                     flow_color = (0, 0, 255)
-                cv2.line(frame, point1, point2, flow_color, font_thickness)
+                cv2.line(frame, point1, point2, flow_color, 
+                         setup.font_thickness)
 
         frame_gray_previous = frame_gray
         #Add description
-        cv2.putText(frame, "Dense optical flow", xy_cord_title, font, 
-                    font_scale, font_color, font_thickness)
-        cv2.putText(frame, "Image index: " + str(frame_index), xy_cord_index, 
-                    font, font_scale, font_color, font_thickness)
-        cv2.imshow(window_title, frame)
-        cv2.waitKey(frame_delay)
+        cv2.putText(frame, "Dense optical flow", setup.xy_cord_title, 
+                        setup.font, setup.font_scale, setup.font_color, 
+                        setup.font_thickness)
+        cv2.putText(frame, "Image index: " + str(i), 
+                        setup.xy_cord_index, setup.font, setup.font_scale, 
+                        setup.font_color, setup.font_thickness)
+        cv2.imshow(setup.window_title, frame)
+        cv2.waitKey(setup.frame_delay)
 
     cv2.waitKey(0)
+    return None
 
 #Display image set #2
 #Detect surfer and sea animal
-def show10_display_surfer_detection(window_setup, image_data_setup, title_setup):
-    frame_size_x, frame_size_y, frame_size_half_x, frame_size_half_y, \
-        image_size_quart_y, frame_delay, rgb_color = window_setup
-    image_path, image_prefix, image_suffix, frame_start_index, frame_count \
-        = image_data_setup
-    xy_cord_title, xy_cord_index, font, font_scale, font_color, \
-        font_thickness, window_title = title_setup
-
-    for i in range(frame_count):
-        frame_index = frame_start_index + i
-        frame_name = image_path + image_prefix + str(frame_index) + image_suffix
+def show10_display_surfer_detection(setup: SetUp) -> None:
+    """Surfer detection with Canny detection and contour"""
+    for i in range(setup.frame_count):
+        frame_name = setup.image_file_name(i)
         frame = cv2.imread(frame_name)
         
         #Detect objects
@@ -451,9 +426,9 @@ def show10_display_surfer_detection(window_setup, image_data_setup, title_setup)
 
         #Filter out objects by size
         for obj in objects:
-            minX = frame_size_x
+            minX = setup.frame_size_x
             maxX = 0
-            minY = frame_size_y
+            minY = setup.frame_size_y
             maxY = 0
             for point in obj:
                 if point[0][0] < minX:
@@ -469,113 +444,70 @@ def show10_display_surfer_detection(window_setup, image_data_setup, title_setup)
             if rangeX < 75 and rangeY < 75 and (rangeX > 5 or rangeY > 5):
                 cv2.drawContours(frame, [obj], -1, (0, 0, 0), 2)
         
-        frame = cv2.putText(frame, "Surfer detection", xy_cord_title, font, 
-                            font_scale, font_color, font_thickness)
-        frame = cv2.putText(frame, "Image index: " + str(frame_index), 
-                            xy_cord_index, font, font_scale, font_color, 
-                            font_thickness)
-        cv2.imshow(window_title, frame)
-        cv2.waitKey(frame_delay)
+        frame = cv2.putText(frame, "Surfer detection", setup.xy_cord_title, 
+                        setup.font, setup.font_scale, setup.font_color, 
+                        setup.font_thickness)
+        frame = cv2.putText(frame, "Image index: " + str(i), 
+                        setup.xy_cord_index, setup.font, setup.font_scale, 
+                        setup.font_color, setup.font_thickness)
+        cv2.imshow(setup.window_title, frame)
+        cv2.waitKey(setup.frame_delay)
 
     cv2.waitKey(0)
+    return None
 
 #Main setup
 def main():
-    #Window setup
-    frame_size_x = 1920
-    frame_size_y = 1080
-    frame_size_half_x = int(frame_size_x / 2)
-    frame_size_half_y = int(frame_size_y / 2)
-    image_size_quart_y = int(frame_size_y / 4)
-    frame_delay = 1
-    rgb_color = ("b", "g", "r")
-    window_setup = (frame_size_x, frame_size_y, frame_size_half_x, frame_size_half_y, image_size_quart_y, frame_delay, rgb_color)
-
-    #Title set up
-    xy_cord_title = (100, 75)
-    xy_cord_index = (1300, 75)
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    font_scale = 2
-    font_color = (255, 255, 255)
-    font_thickness = 2
-    window_title = "AI lab 01"
-    title_setup = (xy_cord_title, xy_cord_index, font, font_scale, font_color, font_thickness, window_title)
-
     #Work on image set #1
     image_path = "./lab01_image_set_1_scout_09/"
     image_prefix = "gimbal0_"
     image_suffix = ".jpg"
     frame_start_index = 2000
     frame_count = 101
-    image_data_setup = (image_path, image_prefix, image_suffix, 
-                        frame_start_index, frame_count)
-    #Display first screen
-    show00_display_title(window_setup, image_data_setup, title_setup)
-    #Show image set #1
-    show01_display_original_image_set(window_setup, image_data_setup, 
-                                      title_setup)
+    setup = SetUp(image_path, image_prefix, image_suffix, frame_start_index, 
+                  frame_count)
 
-    #Histogram setup
-    hist_height_inch = 3
-    hist_width_inch = 6
-    hist_dpi = 100
-    hist_anker_x = 1300
-    hist_anker_y = 100
-    hist_dimension = (hist_height_inch, hist_width_inch, hist_dpi, hist_anker_x, 
-                      hist_anker_y)
-    show02_display_rgb_histogram(window_setup, image_data_setup, title_setup, 
-                                 hist_dimension)
+    #Display first screen
+    show00_display_title(setup)
+
+    #Show image set #1
+    show01_display_original_image_set(setup)
+
+    #Histogram display
+    show02_display_rgb_histogram(setup)
 
     #Incremental blurring
-    show03_display_blur_response(window_setup, image_data_setup, title_setup)
+    show03_display_blur_response(setup)
 
     #Thresholding on gray and RGB channels
-    show04_display_threshold(window_setup, image_data_setup, title_setup)
+    show04_display_threshold(setup)
 
     #Canny edge detection
-    show05_display_canny_edge(window_setup, image_data_setup, title_setup)
+    show05_display_canny_edge(setup)
 
     #Laplacian gradient
-    show06_display_laplacian_gradient(window_setup, image_data_setup, 
-                                      title_setup)
+    show06_display_laplacian_gradient(setup)
 
     #Canny edge and contour detection
-    show07_display_canny_contour(window_setup, image_data_setup, title_setup)
+    show07_display_canny_contour(setup)
 
     #SIFT (Scale Invariant Feature Transform) feature detection
-    show08_display_sift_feature(window_setup, image_data_setup, title_setup)
+    show08_display_sift_feature(setup)
 
     #Farneback dense optical flow
-    show09_display_farneback_dense_optical_flow(window_setup, image_data_setup, 
-                                                title_setup)
+    show09_display_farneback_dense_optical_flow(setup)
     
     #Display image set #2 for object detection
-    image_path = "./lab01_image_set_2_scout_06/"
-    frame_start_index = 1500
-    frame_count = 101
-    image_data_setup = (image_path, image_prefix, image_suffix, 
-                        frame_start_index, frame_count)
-    show01_display_original_image_set(window_setup, image_data_setup, 
-                                      title_setup)
+    setup.image_path = "./lab01_image_set_2_scout_06/"
+    setup.frame_start_index = 1500
+    setup.frame_count = 101
+    show01_display_original_image_set(setup)
 
     #Detect surfer and sea animal
-    show10_display_surfer_detection(window_setup, image_data_setup, title_setup)
+    show10_display_surfer_detection(setup)
 
     #Terminate
     cv2.destroyAllWindows()
 
 if __name__=="__main__":
     main()
-    
-
-
-
-
-
-
-
-
-
-
-
-
