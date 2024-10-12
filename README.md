@@ -24,6 +24,15 @@ lab01_image_set_2_scout_06
 `
 python3 csai_lab1.py
 `
+```
+$python csai_lab1.py -h    
+usage: csai_lab1.py [-h] [-f FRAMEDELAY]
+
+options:
+  -h, --help            show this help message and exit
+  -f FRAMEDELAY, --framedelay FRAMEDELAY
+                        OpenCV waitKey frame delay
+```
 ## Coverage
 |chapter\show                      | 00    | 01    | 02    | 03    | 04    | 05    | 06    | 07    | 08    | 09    | 10    |
 |----------------------------------|-------|-------|-------|-------|-------|-------|-------|-------|-------|-------|-------|
@@ -38,3 +47,6 @@ python3 csai_lab1.py
 |11. Contours                      |       |       |       |       |       |       |       |&check;|       |       |&check;|
 |Extra1: SIFT feature detection    |       |       |       |       |       |       |       |       |&check;|       |       |
 |Extra2: Farneback optical flow    |       |       |       |       |       |       |       |       |       |&check;|       |
+## Example screenshot
+![OpenCV example screen shot](https://github.com/Cinderpe1t/TBS_2024_CS_AI_Lab01_OpenCV/blob/main/CSAI_Lab01_screenshot.png)
+
