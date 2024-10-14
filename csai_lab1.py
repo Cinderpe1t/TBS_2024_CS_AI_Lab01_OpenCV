@@ -1,3 +1,12 @@
+"""
+    Name: Angelina Kim
+    Date: Fall 2024
+    Purpose: Applying different computer vision techniques from the textbook, 
+            Practical Python and OpenCV, 4th ed. by Adrian Rosebrouck to see if 
+            there is possibility of rip current analysis and surfer detection 
+            through a series of ocean images taken 10 fps.
+"""
+
 #CS AI and Computer Vision Lab #1
 #by Angelina Kim
 #
@@ -14,7 +23,6 @@
 #Extra1: SIFT feature detection
 #Extra2: Farnebeck dense optical flow
 
-#Import libraries
 from __future__ import print_function
 import numpy as np
 import argparse
@@ -458,6 +466,12 @@ def show10_display_surfer_detection(setup: SetUp) -> None:
 
 #Main setup
 def main():
+    #load arguments
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument("-f", "--framedelay", required = False,
+                            help = "OpenCV waitKey frame delay", default = 1)
+    arguments = vars(arg_parser.parse_args())
+
     #Work on image set #1
     image_path = "./lab01_image_set_1_scout_09/"
     image_prefix = "gimbal0_"
@@ -466,6 +480,7 @@ def main():
     frame_count = 101
     setup = SetUp(image_path, image_prefix, image_suffix, frame_start_index, 
                   frame_count)
+    setup.frame_delay = int(arguments["framedelay"])
 
     #Display first screen
     show00_display_title(setup)
